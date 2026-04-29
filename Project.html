@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Email Spam Blocker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      display: flex;
+      justify-content: space-between;
+      padding: 20px;
+    }
+
+    .emails, .dashboard {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      width: 48%;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #34495e;
+    }
+
+    .email {
+      border-bottom: 1px solid #ddd;
+      padding: 10px 0;
+    }
+
+    .spam {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+
+    .safe {
+      color: #27ae60;
+      font-weight: bold;
+    }
+
+    .chart {
+      height: 200px;
+      background: #ddd;
+      border-radius: 8px;
+      margin-top: 20px;
+      position: relative;
+    }
+
+    .chart-bar {
+      height: 100%;
+      border-radius: 8px;
+      transition: width 0.5s ease;
+    }
+
+    .chart-label {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+    }
+
+    form {
+      margin-bottom: 20px;
+    }
+
+    input[type="text"] {
+      padding: 10px;
+      width: 70%;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      padding: 10px 15px;
+      margin-left: 10px;
+      background: #2c3e50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #34495e;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Email Spam Blocker</h1>
+    <p>Classify emails as Spam or Safe</p>
+  </header>
+
+  <div class="container">
+    <!-- Email List -->
+    <div class="emails">
+      <h2>Inbox</h2>
+      <form id="emailForm">
+        <input type="text" id="emailInput" placeholder="Enter email subject...">
+        <button type="submit">Add Email</button>
+      </form>
+      <div id="emailList"></div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard">
+      <h2>Spam Overview</h2>
+      <div class="chart">
+        <div class="chart-bar" id="chartBar" style="width: 0; background: linear-gradient(to right, #27ae60, #e74c3c);"></div>
+        <div class="chart-label" id="chartLabel">0% Safe | 0% Spam</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const spamKeywords = ["free", "offer", "win", "prize", "limited", "urgent"];
+    const emailForm = document.getElementById("emailForm");
+    const emailInput = document.getElementById("emailInput");
+    const emailList = document.getElementById("emailList");
+    const chartBar = document.getElementById("chartBar");
+    const chartLabel = document.getElementById("chartLabel");
+
+    let spamCount = 0;
+    let safeCount = 0;
+
+    function classifyEmail(subject) {
+      const emailDiv = document.createElement("div");
+      emailDiv.classList.add("email");
+
+      const subjectP = document.createElement("p");
+      subjectP.innerHTML = `<strong>Subject:</strong> ${subject}`;
+
+      const labelP = document.createElement("p");
+
+      if (spamKeywords.some(word => subject.toLowerCase().includes(word))) {
+        labelP.textContent = "Spam";
+        labelP.className = "spam";
+        spamCount++;
+      } else {
+        labelP.textContent = "Safe";
+        labelP.className = "safe";
+        safeCount++;
+      }
+
+      emailDiv.appendChild(subjectP);
+      emailDiv.appendChild(labelP);
+      emailList.appendChild(emailDiv);
+
+      updateChart();
+    }
+
+    function updateChart() {
+      const total = spamCount + safeCount;
+      if (total === 0) return;
+
+      const spamPercent = Math.round((spamCount / total) * 100);
+      const safePercent = 100 - spamPercent;
+
+      chartBar.style.width = spamPercent + "%";
+      chartLabel.textContent = `${safePercent}% Safe | ${spamPercent}% Spam`;
+    }
+
+    emailForm.addEventListener("submit", e => {
+      e.preventDefault();
+      const subject = emailInput.value.trim();
+      if (subject) {
+        classifyEmail(subject);
+        emailInput.value = "";
+      }
+    });
+  </script>
+</body>
+</html>

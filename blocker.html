@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Email Spam Blocker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      display: flex;
+      justify-content: space-between;
+      padding: 20px;
+    }
+
+    .emails, .dashboard {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      width: 48%;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #34495e;
+    }
+
+    .email {
+      border-bottom: 1px solid #ddd;
+      padding: 10px 0;
+    }
+
+    .spam {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+
+    .safe {
+      color: #27ae60;
+      font-weight: bold;
+    }
+
+    .chart {
+      height: 200px;
+      background: linear-gradient(to right, #27ae60 60%, #e74c3c 40%);
+      border-radius: 8px;
+      margin-top: 20px;
+      position: relative;
+    }
+
+    .chart-label {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Email Spam Blocker</h1>
+    <p>Classify emails as Spam or Safe</p>
+  </header>
+
+  <div class="container">
+    <!-- Email List -->
+    <div class="emails">
+      <h2>Inbox</h2>
+      <div class="email">
+        <p><strong>Subject:</strong> Win a free iPhone!</p>
+        <p class="spam">Spam</p>
+      </div>
+      <div class="email">
+        <p><strong>Subject:</strong> Meeting tomorrow at 10 AM</p>
+        <p class="safe">Safe</p>
+      </div>
+      <div class="email">
+        <p><strong>Subject:</strong> Limited time offer!!!</p>
+        <p class="spam">Spam</p>
+      </div>
+      <div class="email">
+        <p><strong>Subject:</strong> Project update attached</p>
+        <p class="safe">Safe</p>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard">
+      <h2>Spam Overview</h2>
+      <div class="chart">
+        <div class="chart-label">60% Safe | 40% Spam</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

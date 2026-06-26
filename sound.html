@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Email Spam Blocker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      display: flex;
+      justify-content: space-between;
+      padding: 20px;
+      gap: 20px;
+    }
+    .emails, .dashboard {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      width: 48%;
+    }
+    h2 { margin-top: 0; color: #34495e; }
+    .email { border-bottom: 1px solid #ddd; padding: 10px 0; }
+    .spam { color: #e74c3c; font-weight: bold; }
+    .safe { color: #27ae60; font-weight: bold; }
+    .chart {
+      height: 200px;
+      background: #ddd;
+      border-radius: 8px;
+      margin-top: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .chart-bar {
+      height: 100%;
+      border-radius: 8px;
+      transition: width 0.5s ease;
+      background: linear-gradient(to right, #27ae60, #e74c3c);
+    }
+    .chart-label {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+      white-space: nowrap;
+    }
+    input[type="text"] {
+      padding: 10px;
+      width: 65%;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      padding: 10px 15px;
+      margin-left: 10px;
+      background: #2c3e50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover { background: #34495e; }
+    .sound-toggle { margin-top: 15px; }
+    select { margin-left: 10px; padding: 5px; }
+    label { display: block; margin-bottom: 8px; }
+    #testSound {
+      margin-top: 10px;
+      background: #8e44ad;
+      font-size: 13px;
+      padding: 7px 12px;
+    }
+    #testSound:hover { background: #732d91; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Email Spam Blocker</h1>
+    <p>Classify emails as Spam or Safe</p>
+  </header>
+
+  <div class="container">
+    <div class="emails">
+      <h2>Inbox</h2>
+      <div style="margin-bottom:20px;">
+        <input type="text" id="emailInput" placeholder="Enter email subject...">
+        <button id="addBtn">Add Email</button>
+      </div>
+      <div id="emailList"></div>
+    </div>
+
+    <div class="dashboard">
+      <h2>Spam Overview</h2>
+      <div class="chart">
+        <div class="chart-bar" id="chartBar" style="width: 0;"></div>
+        <div class="chart-label" id="chartLabel">0% Safe | 0% Spam</div>
+      </div>
+      <div class="sound-toggle">
+        <label>
+          <input type="checkbox" id="soundToggle" checked>
+          Enable Spam Alert Sound
+        </label>
+        <label>
+          Choose Sound:
+          <select id="soundSelect">
+            <option value="beep">Beep</option>
+            <option value="sharp">Sharp Beep</option>
+            <option value="soft">Soft Beep</option>
+          </select>
+        </label>
+        <button id="testSound">🔊 Test Sound</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const spamKeywords = ["free", "offer", "win", "prize", "limited", "urgent"];
+    const emailInput = document.getElementById("emailInput");
+    const emailList = document.getElementById("emailList");
+    const chartBar = document.getElementById("chartBar");
+    const chartLabel = document.getElementById("chartLabel");
+    const soundToggle = document.getElementById("soundToggle");
+    const soundSelect = document.getElementById("soundSelect");
+    const addBtn = document.getElementById("addBtn");
+    const testSoundBtn = document.getElementById("testSound");
+
+    let spamCount = 0, safeCount = 0;
+
+    // Web Audio API sound generator — no external files needed
+    function playBeep(type) {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      if (type === "beep") {
+        oscillator.type = "square";
+        oscillator.frequency.setValueAtTime(880, ctx.currentTime);
+        gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.3);
+      } else if (type === "sharp") {
+        oscillator.type = "sawtooth";
+        oscillator.frequency.setValueAtTime(1200, ctx.currentTime);
+        gainNode.gain.setValueAtTime(0.4, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.15);
+      } else if (type === "soft") {
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(600, ctx.currentTime);
+        gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.5);
+      }
+    }
+
+    function classifyEmail(subject) {
+      const emailDiv = document.createElement("div");
+      emailDiv.classList.add("email");
+
+      const subjectP = document.createElement("p");
+      subjectP.innerHTML = `<strong>Subject:</strong> ${subject}`;
+
+      const labelP = document.createElement("p");
+
+      if (spamKeywords.some(word => subject.toLowerCase().includes(word))) {
+        labelP.textContent = "⚠ Spam";
+        labelP.className = "spam";
+        spamCount++;
+        if (soundToggle.checked) playBeep(soundSelect.value);
+      } else {
+        labelP.textContent = "✓ Safe";
+        labelP.className = "safe";
+        safeCount++;
+      }
+
+      emailDiv.appendChild(subjectP);
+      emailDiv.appendChild(labelP);
+      emailList.prepend(emailDiv);
+      updateChart();
+    }
+
+    function updateChart() {
+      const total = spamCount + safeCount;
+      if (total === 0) return;
+      const spamPercent = Math.round((spamCount / total) * 100);
+      chartBar.style.width = spamPercent + "%";
+      chartLabel.textContent = `${100 - spamPercent}% Safe | ${spamPercent}% Spam`;
+    }
+
+    addBtn.addEventListener("click", () => {
+      const subject = emailInput.value.trim();
+      if (subject) { classifyEmail(subject); emailInput.value = ""; }
+    });
+
+    emailInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") addBtn.click();
+    });
+
+    testSoundBtn.addEventListener("click", () => playBeep(soundSelect.value));
+  </script>
+</body>
+</html>

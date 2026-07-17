@@ -1,0 +1,30 @@
+{
+  "name": "spam-blocker-ui",
+  "version": "1.0.0",
+  "description": "Production Email Spam Blocker Frontend",
+  "main": "index.html",
+  "scripts": {
+    "start": "npm run dev",
+    "dev": "http-server . -p 3000 -c-1",
+    "build": "echo 'Static site - no build needed'",
+    "build:static": "mkdir -p dist && cp index.html dist/ && cp -r css dist/ && cp -r js dist/",
+    "test": "jest",
+    "lint": "eslint ."
+  },
+  "keywords": [
+    "spam",
+    "email",
+    "blocker"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "jest": "^29.7.0",
+    "eslint": "^8.55.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

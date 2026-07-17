@@ -67,7 +67,7 @@
       padding: 12px 0;
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
       animation: slideIn 0.3s ease;
     }
     .email:last-child {
@@ -95,10 +95,27 @@
       color: #555;
       font-weight: 600;
     }
+    .email-addresses {
+      font-size: 12px;
+      color: #666;
+      margin: 5px 0;
+      line-height: 1.4;
+    }
+    .email-addresses span {
+      display: block;
+    }
+    .from-label, .to-label {
+      font-weight: 600;
+      color: #555;
+    }
+    .email-address {
+      color: #3498db;
+      word-break: break-all;
+    }
     .email-meta {
       font-size: 12px;
       color: #999;
-      margin: 0;
+      margin: 5px 0 0 0;
     }
     .email-actions {
       margin-left: 10px;
@@ -121,6 +138,7 @@
       align-items: center;
       justify-content: center;
       transition: background 0.2s;
+      flex-shrink: 0;
     }
     .delete-btn:hover {
       background: #c0392b;
@@ -184,19 +202,24 @@
     .stat-value.safe-color { color: #27ae60; }
     .input-group {
       display: flex;
-      gap: 10px;
+      flex-direction: column;
+      gap: 12px;
       margin-bottom: 20px;
+    }
+    .input-row {
+      display: flex;
+      gap: 10px;
       flex-wrap: wrap;
     }
-    input[type="text"] {
+    input[type="text"], input[type="email"] {
       padding: 10px;
       flex: 1;
-      min-width: 200px;
+      min-width: 150px;
       border: 1px solid #ccc;
       border-radius: 4px;
       font-size: 14px;
     }
-    input[type="text"]:focus {
+    input[type="text"]:focus, input[type="email"]:focus {
       outline: none;
       border-color: #3498db;
       box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
@@ -210,6 +233,7 @@
       cursor: pointer;
       font-weight: 500;
       transition: background 0.2s;
+      white-space: nowrap;
     }
     button:hover {
       background: #34495e;
@@ -277,6 +301,13 @@
     #clearAllBtn:hover {
       background: #c0392b;
     }
+    .input-label {
+      font-weight: 600;
+      color: #555;
+      font-size: 13px;
+      display: block;
+      margin-bottom: 8px;
+    }
     @media (max-width: 768px) {
       .container {
         flex-direction: column;
@@ -287,7 +318,10 @@
       .input-group {
         flex-direction: column;
       }
-      input[type="text"] {
+      .input-row {
+        flex-direction: column;
+      }
+      input[type="text"], input[type="email"] {
         min-width: 100%;
       }
       h2 {
@@ -295,6 +329,13 @@
         align-items: flex-start;
       }
       .email-badge {
+        margin-top: 10px;
+      }
+      .email {
+        flex-direction: column;
+      }
+      .email-actions {
+        margin-left: 0;
         margin-top: 10px;
       }
     }
@@ -314,19 +355,46 @@
           <span id="emailCount">0</span> emails
         </span>
       </h2>
+      
       <div class="input-group">
-        <input 
-          type="text" 
-          id="emailInput" 
-          placeholder="Enter email subject..." 
-          aria-label="Email subject input"
-        >
-        <button id="addBtn" aria-label="Add email to inbox">Add Email</button>
+        <div>
+          <label class="input-label" for="fromInput">📤 From (Sender)</label>
+          <input 
+            type="email" 
+            id="fromInput" 
+            placeholder="sender@example.com" 
+            aria-label="Email sender address"
+          >
+        </div>
+        
+        <div>
+          <label class="input-label" for="toInput">📥 To (Receiver)</label>
+          <input 
+            type="email" 
+            id="toInput" 
+            placeholder="receiver@example.com" 
+            aria-label="Email receiver address"
+          >
+        </div>
+        
+        <div>
+          <label class="input-label" for="emailInput">📋 Subject</label>
+          <input 
+            type="text" 
+            id="emailInput" 
+            placeholder="Enter email subject..." 
+            aria-label="Email subject input"
+          >
+        </div>
+        
+        <button id="addBtn" aria-label="Add email to inbox">➕ Add Email</button>
       </div>
+      
       <div id="emailList" role="list" aria-label="Email list"></div>
+      
       <div class="action-buttons">
-        <button id="clearAllBtn" aria-label="Clear all emails from inbox">Clear All</button>
-        <button id="exportBtn" aria-label="Export emails as JSON">Export Data</button>
+        <button id="clearAllBtn" aria-label="Clear all emails from inbox">🗑️ Clear All</button>
+        <button id="exportBtn" aria-label="Export emails as JSON">📥 Export Data</button>
       </div>
     </div>
 
@@ -390,7 +458,21 @@
       { regex: /\$\d+/, weight: 1 }
     ];
 
+    // Common spam sender domains
+    const spamSenderDomains = [
+      "noreply@",
+      "no-reply@",
+      "donotreply@",
+      "spam@",
+      "marketing@",
+      "promotions@",
+      "deals@",
+      "offers@"
+    ];
+
     // DOM Elements
+    const fromInput = document.getElementById("fromInput");
+    const toInput = document.getElementById("toInput");
     const emailInput = document.getElementById("emailInput");
     const emailList = document.getElementById("emailList");
     const chartBar = document.getElementById("chartBar");
@@ -499,11 +581,24 @@
       return text.replace(/[&<>"']/g, m => map[m]);
     }
 
+    // Validate email format
+    function isValidEmail(email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
+    }
+
+    // Check if sender looks suspicious
+    function isSuspiciousSender(from) {
+      const lowerFrom = from.toLowerCase();
+      return spamSenderDomains.some(domain => lowerFrom.includes(domain));
+    }
+
     // Detect spam with weighted scoring
-    function isSpam(subject) {
-      const lowerSubject = subject.toLowerCase();
+    function isSpam(subject, from, to) {
       let spamScore = 0;
 
+      // Check subject
+      const lowerSubject = subject.toLowerCase();
       for (const pattern of spamPatterns) {
         if (pattern.word) {
           if (lowerSubject.includes(pattern.word)) spamScore += pattern.weight;
@@ -511,6 +606,12 @@
           if (pattern.regex.test(lowerSubject)) spamScore += pattern.weight;
         }
       }
+
+      // Check sender domain (bonus spam score)
+      if (isSuspiciousSender(from)) spamScore += 2;
+
+      // If "from" and "to" are the same, could be suspicious
+      if (from.toLowerCase() === to.toLowerCase()) spamScore += 1;
 
       return spamScore >= 2;
     }
@@ -528,6 +629,13 @@
       subjectP.className = "email-subject";
       subjectP.innerHTML = `<strong>Subject:</strong> ${escapeHtml(email.subject)}`;
 
+      const addressesDiv = document.createElement("div");
+      addressesDiv.className = "email-addresses";
+      addressesDiv.innerHTML = `
+        <span><span class="from-label">From:</span> <span class="email-address">${escapeHtml(email.from)}</span></span>
+        <span><span class="to-label">To:</span> <span class="email-address">${escapeHtml(email.to)}</span></span>
+      `;
+
       const metaP = document.createElement("p");
       metaP.className = "email-meta";
       metaP.textContent = new Date(email.timestamp).toLocaleString();
@@ -542,6 +650,7 @@
       }
 
       contentDiv.appendChild(subjectP);
+      contentDiv.appendChild(addressesDiv);
       contentDiv.appendChild(metaP);
       contentDiv.appendChild(labelP);
 
@@ -562,12 +671,27 @@
     }
 
     // Classify and add email
-    function addEmail(subject) {
-      if (!subject.trim()) return;
+    function addEmail(from, to, subject) {
+      if (!subject.trim()) {
+        alert("Please enter an email subject.");
+        return;
+      }
 
-      const classification = isSpam(subject) ? "spam" : "safe";
+      if (from && !isValidEmail(from)) {
+        alert("Please enter a valid sender email address.");
+        return;
+      }
+
+      if (to && !isValidEmail(to)) {
+        alert("Please enter a valid receiver email address.");
+        return;
+      }
+
+      const classification = isSpam(subject, from, to) ? "spam" : "safe";
       const email = {
         id: Date.now(),
+        from: from || "Unknown",
+        to: to || "Unknown",
         subject: subject,
         classification: classification,
         timestamp: new Date().toISOString()
@@ -585,6 +709,12 @@
 
       updateChart();
       saveToStorage();
+      
+      // Clear inputs
+      fromInput.value = "";
+      toInput.value = "";
+      emailInput.value = "";
+      emailInput.focus();
     }
 
     // Delete specific email
@@ -664,23 +794,32 @@
       chartLabel.textContent = `${100 - spamPercent}% Safe | ${spamPercent}% Spam`;
     }
 
+    // Update button state
+    function updateButtonState() {
+      addBtn.disabled = emailInput.value.trim() === "";
+    }
+
     // Event listeners
     addBtn.addEventListener("click", () => {
+      const from = fromInput.value.trim();
+      const to = toInput.value.trim();
       const subject = emailInput.value.trim();
-      if (subject) {
-        addEmail(subject);
-        emailInput.value = "";
-        emailInput.focus();
-      }
+      addEmail(from, to, subject);
     });
 
     emailInput.addEventListener("keydown", e => {
       if (e.key === "Enter") addBtn.click();
     });
 
-    emailInput.addEventListener("input", () => {
-      addBtn.disabled = emailInput.value.trim() === "";
+    fromInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") emailInput.focus();
     });
+
+    toInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") emailInput.focus();
+    });
+
+    emailInput.addEventListener("input", updateButtonState);
 
     testSoundBtn.addEventListener("click", () => playBeep(soundSelect.value));
 
@@ -691,6 +830,7 @@
     // Initialize
     loadEmailsFromStorage();
     if (emails.length === 0) updateChart();
+    updateButtonState();
   </script>
 </body>
 </html>

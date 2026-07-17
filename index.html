@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pro Todo - Task Management App</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1>✓ Pro Todo</h1>
+        <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
+          🌙
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-filter="today" title="Today's tasks">
+          📅 Today
+        </button>
+        <button class="nav-item" data-filter="upcoming" title="Upcoming tasks">
+          🗓️ Upcoming
+        </button>
+        <button class="nav-item" data-filter="active" title="Active tasks">
+          ⏳ Active
+        </button>
+        <button class="nav-item" data-filter="completed" title="Completed tasks">
+          ✅ Completed
+        </button>
+        <button class="nav-item" data-filter="all" title="All tasks">
+          📋 All Tasks
+        </button>
+      </nav>
+
+      <div class="categories-section">
+        <div class="section-header">
+          <h3>📁 Categories</h3>
+          <button class="btn-icon" id="addCategoryBtn" title="Add new category">+</button>
+        </div>
+        <ul class="categories-list" id="categoriesList">
+          <!-- Categories dynamically added -->
+        </ul>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="btn-secondary" id="exportBtn" title="Export tasks">📥 Export</button>
+        <button class="btn-secondary" id="importBtn" title="Import tasks">📤 Import</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="main-header">
+        <div class="header-left">
+          <h2 id="pageTitle">Today's Tasks</h2>
+          <span class="task-count" id="taskCount">0 tasks</span>
+        </div>
+        <div class="header-right">
+          <div class="search-box">
+            <input 
+              type="text" 
+              id="searchInput" 
+              placeholder="🔍 Search tasks..."
+              class="search-input"
+            >
+            <button class="search-clear" id="clearSearchBtn">✕</button>
+          </div>
+          <div class="view-options">
+            <button class="view-btn active" data-view="list" title="List view">☰</button>
+            <button class="view-btn" data-view="grid" title="Grid view">⊞</button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Stats Bar -->
+      <div class="stats-bar">
+        <div class="stat">
+          <span class="stat-label">Total</span>
+          <span class="stat-value" id="totalTasks">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Completed</span>
+          <span class="stat-value" id="completedTasks">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Progress</span>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Task Form -->
+      <div class="add-task-container">
+        <form class="add-task-form" id="addTaskForm">
+          <div class="form-row-primary">
+            <input 
+              type="text" 
+              id="taskInput" 
+              placeholder="✍️ Add a new task..." 
+              class="task-input"
+              required
+            >
+            <button type="submit" class="btn-primary">Add Task</button>
+          </div>
+          <div class="form-row-secondary">
+            <select id="prioritySelect" class="form-control">
+              <option value="medium">🟡 Medium</option>
+              <option value="high">🔴 High</option>
+              <option value="low">🟢 Low</option>
+            </select>
+            <select id="categorySelect" class="form-control">
+              <option value="general">📁 General</option>
+            </select>
+            <input 
+              type="date" 
+              id="dueDateInput" 
+              class="form-control"
+            >
+            <label class="checkbox-label">
+              <input type="checkbox" id="recurringCheckbox">
+              <span>🔄 Recurring</span>
+            </label>
+          </div>
+        </form>
+      </div>
+
+      <!-- Tasks Container -->
+      <div class="tasks-container" id="tasksContainer">
+        <!-- Tasks dynamically added -->
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">📭</div>
+        <h3>No tasks yet</h3>
+        <p>Add a new task to get started!</p>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal for editing -->
+  <div class="modal" id="editModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Edit Task</h2>
+        <button class="modal-close" id="closeModalBtn">✕</button>
+      </div>
+      <form class="modal-form" id="editForm">
+        <div class="form-group">
+          <label for="editTaskInput">Task Title</label>
+          <input type="text" id="editTaskInput" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="editDescription">Description</label>
+          <textarea id="editDescription" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editPriority">Priority</label>
+            <select id="editPriority" class="form-control">
+              <option value="low">🟢 Low</option>
+              <option value="medium">🟡 Medium</option>
+              <option value="high">🔴 High</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editCategory">Category</label>
+            <select id="editCategory" class="form-control"></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editDueDate">Due Date</label>
+            <input type="date" id="editDueDate" class="form-control">
+          </div>
+          <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="editRecurring">
+              <span>Recurring</span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="cancelEditBtn">Cancel</button>
+          <button type="submit" class="btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Hidden file input for import -->
+  <input type="file" id="importFileInput" accept=".json" style="display: none;">
+
+  <script src="js/storage.js"></script>
+  <script src="js/todoApp.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/utils.js"></script>
+</body>
+</html>
